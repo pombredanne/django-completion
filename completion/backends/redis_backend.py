@@ -63,7 +63,7 @@ class RedisAutocomplete(BaseBackend):
         keys = []
         for partial_title in partial_complete(title):
             partial_key = create_key(partial_title)
-            self.client.srem(partial_key, data)
+            self.client.srem(partial_key, data['data'])
             key = '%s%s' % (self.prefix, partial_key)
             self.client.zrem(key, '^')
     
