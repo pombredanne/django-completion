@@ -36,6 +36,9 @@ class RedisAutocomplete(BaseBackend):
     def flush(self):
         self.client.flushdb()
     
+    def get_object_data(self, obj):
+        return '%s:%s' % (str(obj._meta), obj.pk)
+    
     def autocomplete_keys(self, title):
         key = create_key(title)
         
@@ -52,33 +55,98 @@ class RedisAutocomplete(BaseBackend):
         for autocomplete via the suggest() method
         """
         title = data['title']
+        
+        # store actual object data
+        obj_data = self.get_object_data(obj)
+        self.client.set('objdata:%s' % obj_data, data['data'])
+        
+        # create tries using sorted sets and add obj_data to the lookup set
         for partial_title in partial_complete(title):
+            # store a reference to our object in the lookup set
+            self.client.sadd(create_key(partial_title), obj_data)
+            
             for (key, value, score) in self.autocomplete_keys(partial_title):
                 self.client.zadd('%s%s' % (self.prefix, key), value, score)
-            
-            self.client.sadd(key, data['data'])
     
     def remove_object(self, obj, data):
         title = data['title']
         keys = []
+
+        obj_data = self.get_object_data(obj)
+        
+        #...how to figure out if its the final item...
         for partial_title in partial_complete(title):
+            # get a list of all the keys that would have been set for the tries
+            autocomplete_keys = list(self.autocomplete_keys(partial_title))
+            
+            # flag for whether ours is the last object at this lookup
+            is_last = False
+            
+            # grab all the members of this lookup set
             partial_key = create_key(partial_title)
-            self.client.srem(partial_key, data['data'])
-            key = '%s%s' % (self.prefix, partial_key)
-            self.client.zrem(key, '^')
+            objects_at_key = self.client.smembers(partial_key)
+            
+            # check the data at this lookup set to see if ours was the only obj
+            # referenced at this point
+            if obj_data not in objects_at_key:
+                # something weird happened and our data isn't even here
+                continue
+            elif len(objects_at_key) == 1:
+                # only one object stored here, remove the terminal flag
+                zset_key = '%s%s' % (self.prefix, partial_key)
+                self.client.zrem(zset_key, '^')
+                
+                # see if there are any other references to keys here
+                is_last = self.client.zcard(zset_key) == 0
+            
+            if is_last:
+                for (key, value, score) in reversed(autocomplete_keys):
+                    key = '%s%s' % (self.prefix, key)
+                    
+                    # another lookup ends here, so bail
+                    if '^' in self.client.zrange(key, 0, -1):
+                        self.client.zrem(key, value)
+                        break
+                    else:
+                        self.client.delete(key)
+                
+                # we can just blow away the lookup key
+                self.client.delete(partial_key)
+            else:
+                # remove only our object's data
+                self.client.srem(partial_key, obj_data)
+        
+        # finally, remove the data from the data key
+        self.client.delete('objdata:%s' % obj_data)
     
     def suggest(self, phrase, limit):
         """
         Wrap our search & results with prefixing
         """
         phrase = create_key(phrase)
+        
+        # perform the depth-first search over the sorted sets
         results = self._suggest('%s%s' % (self.prefix, phrase), limit)
+        
+        # strip the prefix off the keys that indicated they matched a lookup
         prefix_len = len(self.prefix)
         cleaned_keys = map(lambda x: x[prefix_len:], results)
         
-        data = []
+        # lookup the data references for each lookup set
+        obj_data_lookups = []
         for key in cleaned_keys:
-            data.extend(self.client.smembers(key))
+            obj_data_lookups.extend(self.client.smembers(key))
+        
+        seen = set()
+        data = []
+        
+        # grab the data for each object
+        for lookup in obj_data_lookups:
+            if lookup in seen:
+                continue
+            
+            seen.add(lookup)
+            data.append(self.client.get('objdata:%s' % lookup))
         
         return data
     

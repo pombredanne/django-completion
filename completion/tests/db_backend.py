@@ -26,7 +26,7 @@ class DatabaseBackendTestCase(AutocompleteTestCase):
             'webtestingpython',
         ])
     
-    def test_storing_objects(self):
+    def test_storing_objects_db(self):
         test_site.store_object(self.blog_tp)
         self.assertEqual(AutocompleteObject.objects.count(), 1)
         
@@ -39,7 +39,7 @@ class DatabaseBackendTestCase(AutocompleteTestCase):
         test_site.store_object(self.blog_wtp)
         self.assertEqual(AutocompleteObject.objects.count(), 4)
     
-    def test_removing_objects(self):
+    def test_removing_objects_db(self):
         test_site.store_providers()
         
         test_site.remove_object(self.blog_tp)
@@ -70,13 +70,22 @@ class DatabaseBackendTestCase(AutocompleteTestCase):
         results = test_site.suggest('another')
         self.assertEqual(results, [])
     
-    def test_suggest_with_removal(self):
+    def test_removing_objects(self):
         test_site.store_providers()
         
         test_site.remove_object(self.blog_tp)
         
         results = test_site.suggest('testing')
-        self.assertEqual(results, [
-            {'stored_title': 'testing python code'},
+        self.assertEqual(sorted(results), [
+            {'stored_title': 'testing python code'}, 
+            {'stored_title': 'web testing python code'},
+        ])
+        
+        test_site.store_object(self.blog_tp)
+        test_site.remove_object(self.blog_tpc)
+        
+        results = test_site.suggest('testing')
+        self.assertEqual(sorted(results), [
+            {'stored_title': 'testing python'}, 
             {'stored_title': 'web testing python code'},
         ])

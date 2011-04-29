@@ -40,3 +40,12 @@ class SolrBackendTestCase(AutocompleteTestCase):
             {'stored_title': 'testing python code'}, 
             {'stored_title': 'web testing python code'},
         ])
+        
+        test_site.store_object(self.blog_tp)
+        test_site.remove_object(self.blog_tpc)
+        
+        results = test_site.suggest('testing')
+        self.assertEqual(sorted(results), [
+            {'stored_title': 'testing python'}, 
+            {'stored_title': 'web testing python code'},
+        ])
