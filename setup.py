@@ -7,7 +7,7 @@ f.close()
 
 setup(
     name='django-completion',
-    version="0.2.0",
+    version="0.2.1",
     description='autocompletion for django apps',
     long_description=readme,
     author='Charles Leifer',
