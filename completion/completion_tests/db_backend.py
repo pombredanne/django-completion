@@ -1,15 +1,23 @@
 from completion.backends.db_backend import DatabaseAutocomplete
+from completion.completion_tests.base import AutocompleteTestCase, AutocompleteBackendTestCase
+from completion.completion_tests.models import Blog, Note1, Note2, Note3, BlogProvider, NoteProvider
 from completion.models import AutocompleteObject
-from completion.tests.base import AutocompleteTestCase
-from completion.tests.models import Blog, BlogProvider
 from completion.sites import AutocompleteSite
 
 
 test_site = AutocompleteSite(DatabaseAutocomplete())
 test_site.register(Blog, BlogProvider)
+test_site.register(Note1, NoteProvider)
+test_site.register(Note2, NoteProvider)
+test_site.register(Note3, NoteProvider)
 
 
-class DatabaseBackendTestCase(AutocompleteTestCase):
+class DatabaseBackendTestCase(AutocompleteTestCase, AutocompleteBackendTestCase):
+    def setUp(self):
+        self.test_site = test_site
+        AutocompleteTestCase.setUp(self)
+        test_site.flush()
+    
     def test_storing_providers(self):
         self.assertEqual(AutocompleteObject.objects.count(), 0)
         
@@ -23,7 +31,7 @@ class DatabaseBackendTestCase(AutocompleteTestCase):
             'testingpythoncode',
             'testswithpython',
             'unittestswith',
-            'webtestingpython',
+            'webtestingpython'
         ])
     
     def test_storing_objects_db(self):
@@ -50,42 +58,3 @@ class DatabaseBackendTestCase(AutocompleteTestCase):
         
         test_site.remove_object(self.blog_tpc)
         self.assertEqual(AutocompleteObject.objects.count(), 4)
-    
-    def test_suggest(self):
-        test_site.store_providers()
-        
-        results = test_site.suggest('testing python')
-        self.assertEqual(results, [
-            {'stored_title': 'testing python'},
-            {'stored_title': 'testing python code'},
-            {'stored_title': 'web testing python code'},
-        ])
-        
-        results = test_site.suggest('unit')
-        self.assertEqual(results, [{'stored_title': 'unit tests with python'}])
-        
-        results = test_site.suggest('')
-        self.assertEqual(results, [])
-        
-        results = test_site.suggest('another')
-        self.assertEqual(results, [])
-    
-    def test_removing_objects(self):
-        test_site.store_providers()
-        
-        test_site.remove_object(self.blog_tp)
-        
-        results = test_site.suggest('testing')
-        self.assertEqual(sorted(results), [
-            {'stored_title': 'testing python code'}, 
-            {'stored_title': 'web testing python code'},
-        ])
-        
-        test_site.store_object(self.blog_tp)
-        test_site.remove_object(self.blog_tpc)
-        
-        results = test_site.suggest('testing')
-        self.assertEqual(sorted(results), [
-            {'stored_title': 'testing python'}, 
-            {'stored_title': 'web testing python code'},
-        ])

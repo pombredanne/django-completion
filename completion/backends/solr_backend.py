@@ -32,15 +32,26 @@ class SolrAutocomplete(BaseBackend):
     def remove_object(self, obj, data):
         self.client.delete(id=self.generate_unique_id(obj), commit=True)
     
-    def phrase_to_query(self, phrase):
-        return 'title_ngram:%s sites:%s' % (phrase, settings.SITE_ID)
+    def phrase_to_query(self, phrase, models):
+        base_query = 'title_ngram:%s sites:%s' % (phrase, settings.SITE_ID)
+        
+        if models:
+            additional_query = 'django_ct:(%s)' % ' OR '.join([
+                str(model_class._meta) for model_class in models
+            ])
+            query = '%s %s' % (base_query, additional_query)
+        else:
+            query = base_query
+            
+        return query
     
-    def suggest(self, phrase, limit):
+    def suggest(self, phrase, limit, models):
         if not phrase:
             return []
         
         results = self.client.search(
-            self.phrase_to_query(phrase),
+            self.phrase_to_query(phrase, models),
             rows=limit or constants.DEFAULT_RESULTS
         )
+        
         return map(lambda r: r['data'], results)

@@ -1,4 +1,4 @@
-from completion.tests.base import AutocompleteTestCase
+from completion.completion_tests.base import AutocompleteTestCase
 from completion.utils import clean_phrase, partial_complete, create_key
 
 
@@ -14,7 +14,7 @@ class UtilsTestCase(AutocompleteTestCase):
         
         self.assertEqual(
             clean_phrase('The Best of times, the blurst of times'),
-            ['best', 'of', 'times,', 'blurst', 'of', 'times'])
+            ['best', 'times,', 'blurst', 'times'])
     
     def test_partial_complete(self):
         self.assertEqual(list(partial_complete('1')), ['1'])
@@ -25,7 +25,8 @@ class UtilsTestCase(AutocompleteTestCase):
         
         self.assertEqual(
             list(partial_complete('The Best of times, the blurst of times')),
-            ['best of times,', 'of times, blurst', 'times, blurst of', 'blurst of times'])
+            ['best times, blurst', 'times, blurst times']
+        )
         
         self.assertEqual(list(partial_complete('a the An')), [''])
         self.assertEqual(list(partial_complete('a')), [''])
@@ -33,7 +34,8 @@ class UtilsTestCase(AutocompleteTestCase):
     def test_create_key(self):
         self.assertEqual(
             create_key('the best of times, the blurst of Times'),
-            'bestoftimes')
+            'besttimesblurst'
+        )
         
         self.assertEqual(create_key('<?php $bling; $bling; ?>'),
             'phpblingbling')

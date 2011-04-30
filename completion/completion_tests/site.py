@@ -3,10 +3,10 @@ import datetime
 from django.contrib.auth.models import User, Group
 
 from completion.backends.base import BaseBackend
+from completion.completion_tests.base import AutocompleteTestCase
+from completion.completion_tests.models import Blog, BlogProvider
 from completion.models import AutocompleteObject
 from completion.sites import AutocompleteProvider, AutocompleteSite
-from completion.tests.base import AutocompleteTestCase
-from completion.tests.models import Blog, BlogProvider
 from completion.utils import clean_phrase, partial_complete, create_key
 
 
@@ -25,7 +25,7 @@ class DummyBackend(BaseBackend):
         if data['title'] in self._index:
             del(self._index[data['title']])
     
-    def suggest(self, phrase, limit):
+    def suggest(self, phrase, limit, models):
         if phrase in self._index:
             return [self._index[phrase]['data']]
         return []

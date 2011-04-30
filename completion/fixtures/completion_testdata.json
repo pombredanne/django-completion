@@ -1,7 +1,7 @@
 [
     {
         "pk": 1, 
-        "model": "tests.blog", 
+        "model": "completion_tests.blog", 
         "fields": {
             "title": "testing python", 
             "published": true,
@@ -10,7 +10,7 @@
     },
     {
         "pk": 2, 
-        "model": "tests.blog", 
+        "model": "completion_tests.blog", 
         "fields": {
             "title": "testing python code", 
             "published": true,
@@ -19,7 +19,7 @@
     },
     {
         "pk": 3, 
-        "model": "tests.blog", 
+        "model": "completion_tests.blog", 
         "fields": {
             "title": "web testing python code", 
             "published": true,
@@ -28,7 +28,7 @@
     },
     {
         "pk": 4, 
-        "model": "tests.blog", 
+        "model": "completion_tests.blog", 
         "fields": {
             "title": "unit tests with python", 
             "published": true,
@@ -37,7 +37,7 @@
     },
     {
         "pk": 5, 
-        "model": "tests.blog", 
+        "model": "completion_tests.blog", 
         "fields": {
             "title": "testing python unpublished draft", 
             "published": false,
@@ -46,7 +46,7 @@
     },
     {
         "pk": 6, 
-        "model": "tests.blog", 
+        "model": "completion_tests.blog", 
         "fields": {
             "title": "another unpublished", 
             "published": false,

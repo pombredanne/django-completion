@@ -11,5 +11,5 @@ class BaseBackend(object):
     def remove_object(self, obj, data):
         raise NotImplementedError
     
-    def suggest(self, phrase, limit):
+    def suggest(self, phrase, limit, models):
         raise NotImplementedError

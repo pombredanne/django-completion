@@ -70,6 +70,12 @@ Objects can be added or removed at any time from the index::
     >>> site.remove_object(some_other_obj)
 
 
+If you have multiple types of objects in your autocomplete index, you can restrict
+results to a certian type by passing in "models" to the suggest method::
+
+    >>> site.suggest('python', models=[Blog, Photo])
+
+
 Configuring
 -----------
 

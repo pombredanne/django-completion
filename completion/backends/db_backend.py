@@ -33,17 +33,27 @@ class DatabaseAutocomplete(BaseBackend):
     def remove_object(self, obj, data):
         AutocompleteObject.objects.for_object(obj).delete()
     
-    def suggest(self, phrase, limit):
+    def suggest(self, phrase, limit, models):
         phrase = create_key(phrase)
         if not phrase:
             return []
         
-        qs = AutocompleteObject.objects.filter(
+        query = dict(
             title__startswith=phrase,
-            sites__pk__exact=settings.SITE_ID
+            sites__pk__exact=settings.SITE_ID,
+        )
+        
+        if models is not None:
+            query.update(content_type__in=[
+                ContentType.objects.get_for_model(model_class) \
+                    for model_class in models
+            ])
+        
+        qs = AutocompleteObject.objects.filter(
+            **query
         ).values_list('data', flat=True)
         
         if limit is not None:
             qs = qs[:limit]
-            
+        
         return qs

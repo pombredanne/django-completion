@@ -6,7 +6,7 @@ def def_to(setting, default):
 
 
 # articles to strip when handling a phrase for autocomplete
-AUTOCOMPLETE_ARTICLES = def_to('AUTOCOMPLETE_ARTICLES', ['a', 'an', 'the'])
+AUTOCOMPLETE_ARTICLES = def_to('AUTOCOMPLETE_ARTICLES', ['a', 'an', 'the', 'of'])
 
 # maximum number of words to generate keys on (Redis & Postgres)
 MAX_WORDS = def_to('AUTOCOMPLETE_MAX_WORDS', 3)

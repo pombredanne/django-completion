@@ -103,9 +103,9 @@ class AutocompleteSite(object):
         obj_dict = self.prepare_object(provider, obj)
         self.backend.remove_object(obj, obj_dict)
     
-    def suggest(self, text, limit=None):
+    def suggest(self, text, limit=None, models=None):
         # pass limit to the backend in case it can optimize
-        result_set = self.backend.suggest(text, limit)
+        result_set = self.backend.suggest(text, limit, models)
         if limit is not None:
             result_set = result_set[:limit]
         return map(self.deserialize_data, result_set)

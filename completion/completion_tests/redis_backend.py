@@ -1,58 +1,23 @@
 from django.contrib.auth.models import User
 
 from completion.backends.redis_backend import RedisAutocomplete
-from completion.tests.base import AutocompleteTestCase
-from completion.tests.models import Blog, BlogProvider
+from completion.completion_tests.base import AutocompleteTestCase, AutocompleteBackendTestCase
+from completion.completion_tests.models import Blog, Note1, Note2, Note3, BlogProvider, NoteProvider
 from completion.sites import AutocompleteSite
 
 
 test_site = AutocompleteSite(RedisAutocomplete(prefix='test:ac:'))
 test_site.register(Blog, BlogProvider)
+test_site.register(Note1, NoteProvider)
+test_site.register(Note2, NoteProvider)
+test_site.register(Note3, NoteProvider)
 
 
-class RedisBackendTestCase(AutocompleteTestCase):
+class RedisBackendTestCase(AutocompleteTestCase, AutocompleteBackendTestCase):
     def setUp(self):
+        self.test_site = test_site
         AutocompleteTestCase.setUp(self)
         test_site.flush()
-    
-    def test_suggest(self):
-        test_site.store_providers()
-
-        results = test_site.suggest('testing')
-        self.assertEqual(sorted(results), [
-            {'stored_title': 'testing python'}, 
-            {'stored_title': 'testing python code'}, 
-            {'stored_title': 'web testing python code'},
-        ])
-        
-        results = test_site.suggest('unit')
-        self.assertEqual(results, [{'stored_title': 'unit tests with python'}])
-        
-        results = test_site.suggest('')
-        self.assertEqual(results, [])
-        
-        results = test_site.suggest('another')
-        self.assertEqual(results, [])
-        
-    def test_removing_objects(self):
-        test_site.store_providers()
-        
-        test_site.remove_object(self.blog_tp)
-        
-        results = test_site.suggest('testing')
-        self.assertEqual(sorted(results), [
-            {'stored_title': 'testing python code'}, 
-            {'stored_title': 'web testing python code'},
-        ])
-        
-        test_site.store_object(self.blog_tp)
-        test_site.remove_object(self.blog_tpc)
-        
-        results = test_site.suggest('testing')
-        self.assertEqual(sorted(results), [
-            {'stored_title': 'testing python'}, 
-            {'stored_title': 'web testing python code'},
-        ])
     
     def test_removing_objects_in_depth(self):
         # want to ensure that redis is cleaned up and does not become polluted

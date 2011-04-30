@@ -119,7 +119,7 @@ class RedisAutocomplete(BaseBackend):
         # finally, remove the data from the data key
         self.client.delete('objdata:%s' % obj_data)
     
-    def suggest(self, phrase, limit):
+    def suggest(self, phrase, limit, models):
         """
         Wrap our search & results with prefixing
         """
@@ -140,12 +140,21 @@ class RedisAutocomplete(BaseBackend):
         seen = set()
         data = []
         
+        if models:
+            valid_models = set([str(model_class._meta) for model_class in models])
+        
         # grab the data for each object
         for lookup in obj_data_lookups:
             if lookup in seen:
                 continue
             
             seen.add(lookup)
+            
+            if models:
+                model_class, obj_pk = lookup.split(':')
+                if model_class not in valid_models:
+                    continue
+            
             data.append(self.client.get('objdata:%s' % lookup))
         
         return data
