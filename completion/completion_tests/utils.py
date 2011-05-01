@@ -19,13 +19,13 @@ class UtilsTestCase(AutocompleteTestCase):
     def test_partial_complete(self):
         self.assertEqual(list(partial_complete('1')), ['1'])
         self.assertEqual(list(partial_complete('1 2')), ['1 2'])
-        self.assertEqual(list(partial_complete('1 2 3')), ['1 2 3'])
-        self.assertEqual(list(partial_complete('1 2 3 4')), ['1 2 3', '2 3 4'])
-        self.assertEqual(list(partial_complete('1 2 3 4 5')), ['1 2 3', '2 3 4', '3 4 5'])
+        self.assertEqual(list(partial_complete('1 2 3')), ['1 2', '2 3', '1 2 3'])
+        self.assertEqual(list(partial_complete('1 2 3 4')), ['1 2', '2 3', '3 4', '1 2 3', '2 3 4'])
+        self.assertEqual(list(partial_complete('1 2 3 4 5')), ['1 2', '2 3', '3 4', '4 5', '1 2 3', '2 3 4', '3 4 5'])
         
         self.assertEqual(
             list(partial_complete('The Best of times, the blurst of times')),
-            ['best times, blurst', 'times, blurst times']
+            ['best times,', 'times, blurst', 'blurst times', 'best times, blurst', 'times, blurst times']
         )
         
         self.assertEqual(list(partial_complete('a the An')), [''])

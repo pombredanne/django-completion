@@ -20,15 +20,15 @@ class DatabaseAutocomplete(BaseBackend):
         title = data['title']
         for partial_title in partial_complete(title):
             key = create_key(partial_title)
-            obj = AutocompleteObject(
+            autocomplete_obj = AutocompleteObject(
                 title=key,
                 object_id=obj.pk,
                 content_type=ContentType.objects.get_for_model(obj),
                 pub_date=data['pub_date'],
                 data=data['data']
             )
-            obj.save()
-            obj.sites = data['sites']
+            autocomplete_obj.save()
+            autocomplete_obj.sites = data['sites']
     
     def remove_object(self, obj, data):
         AutocompleteObject.objects.for_object(obj).delete()
@@ -51,7 +51,7 @@ class DatabaseAutocomplete(BaseBackend):
         
         qs = AutocompleteObject.objects.filter(
             **query
-        ).values_list('data', flat=True)
+        ).values_list('data', flat=True).distinct()
         
         if limit is not None:
             qs = qs[:limit]

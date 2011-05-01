@@ -20,11 +20,17 @@ def partial_complete(phrase):
     The quick brown fox jumped --> quick brown fox, brown fox jumped
     """
     words = clean_phrase(phrase)
-    chunks = len(words) - MAX_WORDS + 1
-    chunks = chunks < 1 and 1 or chunks
     
-    for i in range(chunks):
-        yield ' '.join(words[i:i + MAX_WORDS])
+    max_words = max(
+        min(len(words), MAX_WORDS), MIN_WORDS
+    )
+    
+    for num_words in range(MIN_WORDS, max_words + 1):
+        chunks = len(words) - num_words + 1
+        chunks = chunks < 1 and 1 or chunks
+        
+        for i in range(chunks):
+            yield ' '.join(words[i:i + num_words])
 
 def create_key(phrase):
     """

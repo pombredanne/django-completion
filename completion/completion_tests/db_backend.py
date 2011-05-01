@@ -22,16 +22,24 @@ class DatabaseBackendTestCase(AutocompleteTestCase, AutocompleteBackendTestCase)
         self.assertEqual(AutocompleteObject.objects.count(), 0)
         
         test_site.store_providers()
-        self.assertEqual(AutocompleteObject.objects.count(), 6)
+        self.assertEqual(AutocompleteObject.objects.count(), 14)
         
         titles = AutocompleteObject.objects.values_list('title', flat=True)
         self.assertEqual(sorted(titles), [
+            'pythoncode',
+            'pythoncode',
+            'testingpython',
+            'testingpython',
             'testingpython',
             'testingpythoncode',
             'testingpythoncode',
+            'testswith',
             'testswithpython',
+            'unittests',
             'unittestswith',
-            'webtestingpython'
+            'webtesting',
+            'webtestingpython',
+            'withpython'
         ])
     
     def test_storing_objects_db(self):
@@ -39,22 +47,26 @@ class DatabaseBackendTestCase(AutocompleteTestCase, AutocompleteBackendTestCase)
         self.assertEqual(AutocompleteObject.objects.count(), 1)
         
         test_site.store_object(self.blog_tpc)
-        self.assertEqual(AutocompleteObject.objects.count(), 2)
+        self.assertEqual(AutocompleteObject.objects.count(), 4)
         
         test_site.store_object(self.blog_tp) # storing again does not produce dupe
-        self.assertEqual(AutocompleteObject.objects.count(), 2)
+        self.assertEqual(AutocompleteObject.objects.count(), 4)
         
         test_site.store_object(self.blog_wtp)
-        self.assertEqual(AutocompleteObject.objects.count(), 4)
+        # web testing, testing python, python code, web testing python, testing python code
+        self.assertEqual(AutocompleteObject.objects.count(), 9)
     
     def test_removing_objects_db(self):
         test_site.store_providers()
+        self.assertEqual(AutocompleteObject.objects.count(), 14)
         
         test_site.remove_object(self.blog_tp)
-        self.assertEqual(AutocompleteObject.objects.count(), 5)
+        # testing python
+        self.assertEqual(AutocompleteObject.objects.count(), 13)
         
         test_site.remove_object(self.blog_tp)
-        self.assertEqual(AutocompleteObject.objects.count(), 5)
+        self.assertEqual(AutocompleteObject.objects.count(), 13)
         
         test_site.remove_object(self.blog_tpc)
-        self.assertEqual(AutocompleteObject.objects.count(), 4)
+        # testing python, python code, testing python code
+        self.assertEqual(AutocompleteObject.objects.count(), 10)
