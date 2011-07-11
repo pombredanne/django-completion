@@ -71,7 +71,7 @@ class AutocompleteSite(object):
         try:
             return self._providers[type(obj)]
         except KeyError:
-            raise TypeError("Don't know what do with %s" % obj.__name__)
+            raise TypeError("Don't know what do with %s" % obj)
     
     def flush(self):
         self.backend.flush()
