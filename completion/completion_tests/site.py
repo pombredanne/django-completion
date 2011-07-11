@@ -6,7 +6,7 @@ from completion.backends.base import BaseBackend
 from completion.completion_tests.base import AutocompleteTestCase
 from completion.completion_tests.models import Blog, BlogProvider
 from completion.models import AutocompleteObject
-from completion.sites import AutocompleteProvider, AutocompleteSite
+from completion.sites import AutocompleteProvider, AutocompleteSite, UnknownObjectException
 from completion.utils import clean_phrase, partial_complete, create_key
 
 
@@ -61,7 +61,7 @@ class SiteTestCase(AutocompleteTestCase):
         provider = test_site.get_provider(self.blog_tp)
         self.assertTrue(isinstance(provider, BlogProvider))
         
-        self.assertRaises(TypeError, test_site.get_provider, Group)
+        self.assertRaises(UnknownObjectException, test_site.get_provider, Group)
     
     def test_storing_objects(self):
         test_site.flush()

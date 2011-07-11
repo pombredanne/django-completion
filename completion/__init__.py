@@ -1,1 +1,1 @@
-from completion.sites import AutocompleteProvider, site
+from completion.sites import AutocompleteProvider, UnknownObjectException, site
