@@ -2,7 +2,7 @@ import datetime
 
 from django.db import models
 
-from completion.sites import AutocompleteProvider
+from completion.sites import AutocompleteProvider, DjangoModelProvider
 
 
 class Blog(models.Model):
@@ -52,3 +52,7 @@ class NoteProvider(AutocompleteProvider):
     
     def get_data(self, obj):
         return {'stored_title': obj.title}
+
+
+class DjNoteProvider(DjangoModelProvider, NoteProvider):
+    pass

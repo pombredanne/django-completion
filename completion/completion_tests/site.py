@@ -1,10 +1,11 @@
 import datetime
 
 from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
 
 from completion.backends.base import BaseBackend
 from completion.completion_tests.base import AutocompleteTestCase
-from completion.completion_tests.models import Blog, BlogProvider
+from completion.completion_tests.models import Blog, Note1, Note2, Note3, BlogProvider, DjNoteProvider
 from completion.models import AutocompleteObject
 from completion.sites import AutocompleteProvider, AutocompleteSite, UnknownObjectException
 from completion.utils import clean_phrase, partial_complete, create_key
@@ -36,18 +37,21 @@ class DummyBackend(BaseBackend):
 
 test_site = AutocompleteSite(DummyBackend())
 test_site.register(Blog, BlogProvider)
+test_site.register(Note1, DjNoteProvider)
+test_site.register(Note2, DjNoteProvider)
+test_site.register(Note3, DjNoteProvider)
 
 
 class SiteTestCase(AutocompleteTestCase):
     def test_registration(self):
         # make sure our registry is populated with the test provider
-        self.assertEqual(len(test_site._providers), 1)
+        self.assertEqual(len(test_site._providers), 4)
         self.assertTrue(Blog in test_site._providers)
         self.assertTrue(isinstance(test_site._providers[Blog], BlogProvider))
     
         # make sure removing works
         test_site.unregister(Blog)
-        self.assertEqual(len(test_site._providers), 0)
+        self.assertEqual(len(test_site._providers), 3)
         
         # should no-op
         test_site.unregister(Blog)
@@ -55,7 +59,7 @@ class SiteTestCase(AutocompleteTestCase):
         # register & then double-register -> dictionary so just reg'd once
         test_site.register(Blog, BlogProvider)
         test_site.register(Blog, BlogProvider)
-        self.assertEqual(len(test_site._providers), 1)
+        self.assertEqual(len(test_site._providers), 4)
     
     def test_get_provider(self):
         provider = test_site.get_provider(self.blog_tp)
@@ -139,3 +143,28 @@ class SiteTestCase(AutocompleteTestCase):
         
         results = test_site.suggest('another unpublished')
         self.assertEqual(results, [])
+    
+    def test_dj_provider(self):
+        test_site.flush()
+        
+        n1 = Note1.objects.create(title='n1')
+        n2 = Note2.objects.create(title='n2')
+        n3 = Note3.objects.create(title='n3')
+        
+        test_site.store_object(n1)
+        test_site.store_object(n2)
+        test_site.store_object(n3)
+        
+        results = test_site.suggest('n1')
+        self.assertEqual(results, [{
+            'stored_title': 'n1',
+            'django_ct': ContentType.objects.get_for_model(Note1).id,
+            'object_id': n1.pk,
+        }])
+        
+        results = test_site.suggest('n2')
+        self.assertEqual(results, [{
+            'stored_title': 'n2',
+            'django_ct': ContentType.objects.get_for_model(Note2).id,
+            'object_id': n2.pk,
+        }])

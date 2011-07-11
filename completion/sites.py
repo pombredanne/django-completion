@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.db.models.query import QuerySet
 from django.utils import simplejson as json
@@ -53,6 +54,16 @@ class AutocompleteProvider(object):
             'pub_date': self.get_pub_date(obj),
             'data': self.get_data(obj)
         }
+
+
+class DjangoModelProvider(AutocompleteProvider):
+    def object_to_dictionary(self, obj):
+        obj_dict = super(DjangoModelProvider, self).object_to_dictionary(obj)
+        obj_dict['data'].update(
+            django_ct=ContentType.objects.get_for_model(obj).pk,
+            object_id=obj.pk,
+        )
+        return obj_dict
 
 
 class UnknownObjectException(Exception):
