@@ -3,9 +3,11 @@ import datetime
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 
+from completion import listeners
 from completion.backends.base import BaseBackend
 from completion.completion_tests.base import AutocompleteTestCase
 from completion.completion_tests.models import Blog, Note1, Note2, Note3, BlogProvider, DjNoteProvider
+from completion.listeners import start_listening, stop_listening
 from completion.models import AutocompleteObject
 from completion.sites import AutocompleteProvider, AutocompleteSite, UnknownObjectException
 from completion.utils import clean_phrase, partial_complete, create_key
@@ -168,3 +170,39 @@ class SiteTestCase(AutocompleteTestCase):
             'django_ct': ContentType.objects.get_for_model(Note2).id,
             'object_id': n2.pk,
         }])
+
+
+class SignalHandlerTestCase(AutocompleteTestCase):
+    def setUp(self):
+        self._orig_site = listeners.site
+        listeners.site = test_site
+        AutocompleteTestCase.setUp(self)
+    
+    def tearDown(self):
+        listeners.site = self._orig_site
+        AutocompleteTestCase.tearDown(self)
+    
+    def test_signal_handlers(self):
+        test_site.flush()
+        
+        n1 = Note1.objects.create(title='n1')
+        self.assertEqual(len(test_site.backend._index), 0)
+        
+        start_listening()
+        
+        n1.save()
+        self.assertEqual(len(test_site.backend._index), 1)
+        
+        n1.save()
+        self.assertEqual(len(test_site.backend._index), 1)
+        
+        n2 = Note2.objects.create(title='n2')
+        self.assertEqual(len(test_site.backend._index), 2)
+        
+        n1.delete()
+        self.assertEqual(len(test_site.backend._index), 1)
+        
+        stop_listening()
+        
+        n2.delete()
+        self.assertEqual(len(test_site.backend._index), 1)
