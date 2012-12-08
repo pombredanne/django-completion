@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.db.models.query import QuerySet
 from django.utils import simplejson as json
@@ -55,6 +56,20 @@ class AutocompleteProvider(object):
         }
 
 
+class DjangoModelProvider(AutocompleteProvider):
+    def object_to_dictionary(self, obj):
+        obj_dict = super(DjangoModelProvider, self).object_to_dictionary(obj)
+        obj_dict['data'].update(
+            django_ct=ContentType.objects.get_for_model(obj).pk,
+            object_id=obj.pk,
+        )
+        return obj_dict
+
+
+class UnknownObjectException(Exception):
+    pass
+
+
 class AutocompleteSite(object):
     def __init__(self, backend):
         self._providers = {}
@@ -71,7 +86,7 @@ class AutocompleteSite(object):
         try:
             return self._providers[type(obj)]
         except KeyError:
-            raise TypeError("Don't know what do with %s" % obj.__name__)
+            raise UnknownObjectException("Don't know what do with %s" % obj)
     
     def flush(self):
         self.backend.flush()
@@ -103,9 +118,9 @@ class AutocompleteSite(object):
         obj_dict = self.prepare_object(provider, obj)
         self.backend.remove_object(obj, obj_dict)
     
-    def suggest(self, text, limit=None, models=None):
+    def suggest(self, text, limit=None, models=None, **kwargs):
         # pass limit to the backend in case it can optimize
-        result_set = self.backend.suggest(text, limit, models)
+        result_set = self.backend.suggest(text, limit, models, **kwargs)
         if limit is not None:
             result_set = result_set[:limit]
         return map(self.deserialize_data, result_set)
